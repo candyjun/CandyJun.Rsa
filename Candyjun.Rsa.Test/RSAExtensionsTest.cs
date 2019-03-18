@@ -7,6 +7,7 @@ using Org.BouncyCastle.Security;
 using System;
 using System.IO;
 using System.Security.Cryptography;
+using System.Text;
 
 namespace Candyjun.Rsa.Test
 {
@@ -14,43 +15,26 @@ namespace Candyjun.Rsa.Test
     public class RSAExtensionsTest
     {
         string privateKey;
-        string publicKey;
+        byte[] pkcs12FileContents;
+        byte[] publicCer;
         public RSAExtensionsTest()
         {
-            var generator = new RsaKeyPairGenerator();
-            var secureRandom = new SecureRandom();
-            generator.Init(new KeyGenerationParameters(secureRandom, 2048));
-            var pair = generator.GenerateKeyPair();
-
-            using (var twPrivate = new StringWriter())
-            {
-                PemWriter pwPrivate = new PemWriter(twPrivate);
-                pwPrivate.WriteObject(pair.Private);
-                pwPrivate.Writer.Flush();
-                privateKey = twPrivate.ToString();
-                Console.WriteLine("Private Key£º" + privateKey);
-            }
-
-            using (var twPublic = new StringWriter())
-            {
-                PemWriter pwPublic = new PemWriter(twPublic);
-                pwPublic.WriteObject(pair.Public);
-                pwPublic.Writer.Flush();
-                publicKey = twPublic.ToString();
-                Console.WriteLine("Public Key£º" + publicKey);
-            }
+            privateKey = File.ReadAllText("TestData\\server.key");
+            privateKey = RsaPemFormatHelper.Pkcs8PrivateKeyFormatRemove(privateKey);
+            pkcs12FileContents = File.ReadAllBytes("TestData\\server.pfx");
+            publicCer = File.ReadAllBytes("TestData\\server.public.cer");
         }
 
         [TestMethod]
         public void TestEncryptString()
         {
             var provider = RSA.Create();
-            provider.FromPemPublicKeyString(publicKey);
+            provider.FromPublicCert(publicCer);
             var str = "1";
-            var encStr = provider.EncryptString(str, "RSA");
+            var encStr = provider.Encrypt(str, "RSA");
 
             var provider2 = RSA.Create();
-            provider2.FromPemPrivateKeyString(privateKey);
+            provider2.FromPkcs12Bytes(pkcs12FileContents, true);
             var sourceStr = provider2.Decrypt(encStr, "RSA");
             Assert.AreEqual(str, sourceStr);
         }
@@ -59,14 +43,62 @@ namespace Candyjun.Rsa.Test
         public void TestSignString()
         {
             var provider = RSA.Create();
-            provider.FromPemPrivateKeyString(privateKey);
+            provider.FromPrivateKeyString(privateKey);
             var str = "1";
-            var encStr = provider.SignData(str, "RSA");
+            var encStr = provider.SignData(str, "MD5WITHRSA");
 
             var provider2 = RSA.Create();
-            provider2.FromPemPublicKeyString(publicKey);
-            var verifyResult = provider2.VerifyData(str, "RSA/CCB/Nopadding", encStr);
+            var pub = RSAKeyConvert.ConvertPublicCertToXml(publicCer);
+            pub = RSAKeyConvert.ConvertXmlToPublicKey(pub);
+            provider2.FromPemPublicKeyString(RsaPemFormatHelper.PublicKeyFormat(pub));
+            var verifyResult = provider2.VerifyData(str, "MD5WITHRSA", encStr);
             Assert.IsTrue(verifyResult);
+        }
+
+        [TestMethod]
+        public void TestVerifyString()
+        {
+            var generator = new RsaKeyPairGenerator();
+            var secureRandom = new SecureRandom();
+            generator.Init(new KeyGenerationParameters(secureRandom, 2048));
+            var pair = generator.GenerateKeyPair();
+            string privatePemKey;
+            using (var twPrivate = new StringWriter())
+            {
+                PemWriter pwPrivate = new PemWriter(twPrivate);
+                pwPrivate.WriteObject(pair.Private);
+                pwPrivate.Writer.Flush();
+                privatePemKey = twPrivate.ToString();
+                Console.WriteLine("Private Key£º" + privatePemKey);
+            }
+            string publicKey;
+            using (var twPublic = new StringWriter())
+            {
+                PemWriter pwPublic = new PemWriter(twPublic);
+                pwPublic.WriteObject(pair.Public);
+                pwPublic.Writer.Flush();
+                publicKey = twPublic.ToString();
+                Console.WriteLine("Public Key£º" + publicKey);
+            }
+
+            var provider = RSA.Create();
+            provider.FromPemPrivateKeyString(privatePemKey);
+            var str = "1";
+            var encStr = provider.SignData(str, "MD5WITHRSA");
+
+            var provider2 = RSA.Create();
+            provider2.FromXmlStringCore(provider.ToXmlStringCore(true));
+            var verifyResult = provider2.VerifyData(str, "MD5WITHRSA", encStr);
+            Assert.IsTrue(verifyResult);
+
+            var provider3 = RSA.Create();
+            provider3.FromXmlStringCore(provider.ToXmlStringCore(false));
+            var verifyResult2 = provider3.VerifyData(
+                Encoding.UTF8.GetBytes(str),
+                Convert.FromBase64String(encStr),
+                HashAlgorithmName.MD5,
+                RSASignaturePadding.Pkcs1);
+            Assert.IsTrue(verifyResult2);
         }
     }
 }

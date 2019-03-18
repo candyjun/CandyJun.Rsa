@@ -27,6 +27,7 @@ namespace CandyJun.Rsa
         /// <returns>xml格式私钥</returns>
         public static string ConvertPrivateKeyToXml(string privateKey)
         {
+            privateKey = RsaPemFormatHelper.Pkcs8PrivateKeyFormatRemove(privateKey);
             var privateKeyParam = (RsaPrivateCrtKeyParameters)PrivateKeyFactory.CreateKey(Convert.FromBase64String(privateKey));
             string xmlPrivateKey = string.Format("<RSAKeyValue><Modulus>{0}</Modulus><Exponent>{1}</Exponent><P>{2}</P><Q>{3}</Q><DP>{4}</DP><DQ>{5}</DQ><InverseQ>{6}</InverseQ><D>{7}</D></RSAKeyValue>",
                          Convert.ToBase64String(privateKeyParam.Modulus.ToByteArrayUnsigned()),
@@ -74,7 +75,7 @@ namespace CandyJun.Rsa
         /// <returns>xml格式私钥</returns>
         public static string ConvertPrivateKeyPkcs12ToXml(byte[] pkcs12FileContents, bool includePrivateParameters, string password = null)
         {
-            X509Certificate2 cert = new X509Certificate2(pkcs12FileContents, password);
+            X509Certificate2 cert = new X509Certificate2(pkcs12FileContents, password, X509KeyStorageFlags.Exportable);
             var parameters = cert.GetRSAPrivateKey().ExportParameters(true);
             return string.Format("<RSAKeyValue><Modulus>{0}</Modulus><Exponent>{1}</Exponent><P>{2}</P><Q>{3}</Q><DP>{4}</DP><DQ>{5}</DQ><InverseQ>{6}</InverseQ><D>{7}</D></RSAKeyValue>",
                     Convert.ToBase64String(parameters.Modulus),
@@ -104,35 +105,26 @@ namespace CandyJun.Rsa
             RsaPrivateCrtKeyParameters rsaPrivateCrtKeyParameters =
                 (RsaPrivateCrtKeyParameters)PrivateKeyFactory.CreateKey(
                     PrivateKeyInfoFactory.CreatePrivateKeyInfo(asymmetricCipherKeyPair.Private));
-
-            XElement privatElement = new XElement("RSAKeyValue");
-            //Modulus
-            XElement primodulus = new XElement("Modulus", Convert.ToBase64String(rsaPrivateCrtKeyParameters.Modulus.ToByteArrayUnsigned()));
-            //Exponent
-            XElement priexponent = new XElement("Exponent", Convert.ToBase64String(rsaPrivateCrtKeyParameters.PublicExponent.ToByteArrayUnsigned()));
-            //P
-            XElement prip = new XElement("P", Convert.ToBase64String(rsaPrivateCrtKeyParameters.P.ToByteArrayUnsigned()));
-            //Q
-            XElement priq = new XElement("Q", Convert.ToBase64String(rsaPrivateCrtKeyParameters.Q.ToByteArrayUnsigned()));
-            //DP
-            XElement pridp = new XElement("DP", Convert.ToBase64String(rsaPrivateCrtKeyParameters.DP.ToByteArrayUnsigned()));
-            //DQ
-            XElement pridq = new XElement("DQ", Convert.ToBase64String(rsaPrivateCrtKeyParameters.DQ.ToByteArrayUnsigned()));
-            //InverseQ
-            XElement priinverseQ = new XElement("InverseQ", Convert.ToBase64String(rsaPrivateCrtKeyParameters.QInv.ToByteArrayUnsigned()));
-            //D
-            XElement prid = new XElement("D", Convert.ToBase64String(rsaPrivateCrtKeyParameters.Exponent.ToByteArrayUnsigned()));
-
-            privatElement.Add(primodulus);
-            privatElement.Add(priexponent);
-            privatElement.Add(prip);
-            privatElement.Add(priq);
-            privatElement.Add(pridp);
-            privatElement.Add(pridq);
-            privatElement.Add(priinverseQ);
-            privatElement.Add(prid);
-
-            return privatElement.ToString();
+            var parameters = new
+            {
+                Modulus = rsaPrivateCrtKeyParameters.Modulus.ToByteArrayUnsigned(),
+                Exponent = rsaPrivateCrtKeyParameters.PublicExponent.ToByteArrayUnsigned(),
+                P = rsaPrivateCrtKeyParameters.P.ToByteArrayUnsigned(),
+                Q = rsaPrivateCrtKeyParameters.Q.ToByteArrayUnsigned(),
+                DP = rsaPrivateCrtKeyParameters.DP.ToByteArrayUnsigned(),
+                DQ = rsaPrivateCrtKeyParameters.DQ.ToByteArrayUnsigned(),
+                InverseQ = rsaPrivateCrtKeyParameters.QInv.ToByteArrayUnsigned(),
+                D = rsaPrivateCrtKeyParameters.Exponent.ToByteArrayUnsigned()
+            };
+            return string.Format("<RSAKeyValue><Modulus>{0}</Modulus><Exponent>{1}</Exponent><P>{2}</P><Q>{3}</Q><DP>{4}</DP><DQ>{5}</DQ><InverseQ>{6}</InverseQ><D>{7}</D></RSAKeyValue>",
+                   Convert.ToBase64String(parameters.Modulus),
+                   Convert.ToBase64String(parameters.Exponent),
+                   Convert.ToBase64String(parameters.P),
+                   Convert.ToBase64String(parameters.Q),
+                   Convert.ToBase64String(parameters.DP),
+                   Convert.ToBase64String(parameters.DQ),
+                   Convert.ToBase64String(parameters.InverseQ),
+                   Convert.ToBase64String(parameters.D));
         }
 
         /// <summary>
@@ -231,37 +223,29 @@ namespace CandyJun.Rsa
         public static string ConvertPrivateKeyPkcs8ToXml(string privateKey)
         {
             privateKey = RsaPemFormatHelper.Pkcs8PrivateKeyFormatRemove(privateKey);
-            RsaPrivateCrtKeyParameters privateKeyParam =
+            RsaPrivateCrtKeyParameters rsaPrivateCrtKeyParameters =
                 (RsaPrivateCrtKeyParameters)PrivateKeyFactory.CreateKey(Convert.FromBase64String(privateKey));
 
-            XElement privatElement = new XElement("RSAKeyValue");
-            //Modulus
-            XElement primodulus = new XElement("Modulus", Convert.ToBase64String(privateKeyParam.Modulus.ToByteArrayUnsigned()));
-            //Exponent
-            XElement priexponent = new XElement("Exponent", Convert.ToBase64String(privateKeyParam.PublicExponent.ToByteArrayUnsigned()));
-            //P
-            XElement prip = new XElement("P", Convert.ToBase64String(privateKeyParam.P.ToByteArrayUnsigned()));
-            //Q
-            XElement priq = new XElement("Q", Convert.ToBase64String(privateKeyParam.Q.ToByteArrayUnsigned()));
-            //DP
-            XElement pridp = new XElement("DP", Convert.ToBase64String(privateKeyParam.DP.ToByteArrayUnsigned()));
-            //DQ
-            XElement pridq = new XElement("DQ", Convert.ToBase64String(privateKeyParam.DQ.ToByteArrayUnsigned()));
-            //InverseQ
-            XElement priinverseQ = new XElement("InverseQ", Convert.ToBase64String(privateKeyParam.QInv.ToByteArrayUnsigned()));
-            //D
-            XElement prid = new XElement("D", Convert.ToBase64String(privateKeyParam.Exponent.ToByteArrayUnsigned()));
-
-            privatElement.Add(primodulus);
-            privatElement.Add(priexponent);
-            privatElement.Add(prip);
-            privatElement.Add(priq);
-            privatElement.Add(pridp);
-            privatElement.Add(pridq);
-            privatElement.Add(priinverseQ);
-            privatElement.Add(prid);
-
-            return privatElement.ToString();
+            var parameters = new
+            {
+                Modulus = rsaPrivateCrtKeyParameters.Modulus.ToByteArrayUnsigned(),
+                Exponent = rsaPrivateCrtKeyParameters.PublicExponent.ToByteArrayUnsigned(),
+                P = rsaPrivateCrtKeyParameters.P.ToByteArrayUnsigned(),
+                Q = rsaPrivateCrtKeyParameters.Q.ToByteArrayUnsigned(),
+                DP = rsaPrivateCrtKeyParameters.DP.ToByteArrayUnsigned(),
+                DQ = rsaPrivateCrtKeyParameters.DQ.ToByteArrayUnsigned(),
+                InverseQ = rsaPrivateCrtKeyParameters.QInv.ToByteArrayUnsigned(),
+                D = rsaPrivateCrtKeyParameters.Exponent.ToByteArrayUnsigned()
+            };
+            return string.Format("<RSAKeyValue><Modulus>{0}</Modulus><Exponent>{1}</Exponent><P>{2}</P><Q>{3}</Q><DP>{4}</DP><DQ>{5}</DQ><InverseQ>{6}</InverseQ><D>{7}</D></RSAKeyValue>",
+                   Convert.ToBase64String(parameters.Modulus),
+                   Convert.ToBase64String(parameters.Exponent),
+                   Convert.ToBase64String(parameters.P),
+                   Convert.ToBase64String(parameters.Q),
+                   Convert.ToBase64String(parameters.DP),
+                   Convert.ToBase64String(parameters.DQ),
+                   Convert.ToBase64String(parameters.InverseQ),
+                   Convert.ToBase64String(parameters.D));
         }
 
         /// <summary>

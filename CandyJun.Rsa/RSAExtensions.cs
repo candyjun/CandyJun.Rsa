@@ -21,11 +21,11 @@ namespace CandyJun.Rsa
     {
         #region Key
         /// <summary>
-        /// 加载XML格式密钥
+        /// 加载XML格式密钥 (.net core FromXmlString异常修复版本)
         /// </summary>
         /// <param name="rsa"></param>
         /// <param name="xmlString">XML格式密钥</param>
-        public static void FromXmlString2(this RSA rsa, string xmlString)
+        public static void FromXmlStringCore(this RSA rsa, string xmlString)
         {
             RSAParameters parameters = new RSAParameters();
             XmlDocument xmlDoc = new XmlDocument();
@@ -63,7 +63,7 @@ namespace CandyJun.Rsa
         public static void FromPrivateKeyString(this RSA rsa, string privateKey)
         {
             string xmlPrivateKey = RSAKeyConvert.ConvertPrivateKeyToXml(privateKey);
-            rsa.FromXmlString2(xmlPrivateKey);
+            rsa.FromXmlStringCore(xmlPrivateKey);
         }
 
         /// <summary>
@@ -73,7 +73,7 @@ namespace CandyJun.Rsa
         /// <returns></returns>
         public static void FromPemPublicKeyString(this RSA rsa, string pemPublicKey)
         {
-            var publicKey = pemPublicKey.Replace("-----BEGIN PUBLIC KEY-----", "").Replace("-----END PUBLIC KEY-----", "").Replace("\n", "").Replace("\r", "");
+            var publicKey = RsaPemFormatHelper.PublicKeyFormatRemove(pemPublicKey);
             rsa.FromPublicKeyString(publicKey);
         }
 
@@ -115,16 +115,16 @@ namespace CandyJun.Rsa
         public static void FromPkcs12Bytes(this RSA rsa, byte[] pkcs12FileContents, bool includePrivateParameters, string password = null)
         {
             string xmlPrivateKey = RSAKeyConvert.ConvertPrivateKeyPkcs12ToXml(pkcs12FileContents, includePrivateParameters, password);
-            rsa.FromXmlString2(xmlPrivateKey);
+            rsa.FromXmlStringCore(xmlPrivateKey);
         }
 
         /// <summary>
-        /// 导出XML格式密钥
+        /// 导出XML格式密钥 (.net core ToXmlString异常修复版本)
         /// </summary>
         /// <param name="rsa"></param>
         /// <param name="includePrivateParameters">是否包含私钥</param>
         /// <returns></returns>
-        public static string ToXmlString2(this RSA rsa, bool includePrivateParameters)
+        public static string ToXmlStringCore(this RSA rsa, bool includePrivateParameters)
         {
             RSAParameters parameters = rsa.ExportParameters(includePrivateParameters);
 
@@ -176,7 +176,7 @@ namespace CandyJun.Rsa
         public static void FromPublicKeyString(this RSA rsa, string publicKey)
         {
             string xmlpublicKey = RSAKeyConvert.ConvertPublicKeyToXml(publicKey);
-            rsa.FromXmlString2(xmlpublicKey);
+            rsa.FromXmlStringCore(xmlpublicKey);
         }
 
         /// <summary>
@@ -187,7 +187,7 @@ namespace CandyJun.Rsa
         public static void FromPublicCert(this RSA rsa, byte[] publicCert)
         {
             string xmlpublicKey = RSAKeyConvert.ConvertPublicCertToXml(publicCert);
-            rsa.FromXmlString2(xmlpublicKey);
+            rsa.FromXmlStringCore(xmlpublicKey);
         }
 
         /// <summary>
@@ -215,9 +215,9 @@ namespace CandyJun.Rsa
         /// <param name="data">待加密的字符串(将以UTF8格式编码加密)</param>
         /// <param name="hashAlgorithm">加密算法和填充模式</param>
         /// <returns>base64编码的加密后数据</returns>
-        public static string EncryptString(this RSA provider, string data, string hashAlgorithm)
+        public static string Encrypt(this RSA provider, string data, string hashAlgorithm)
         {
-            return provider.EncryptString(data, hashAlgorithm, Encoding.UTF8);
+            return provider.Encrypt(data, hashAlgorithm, Encoding.UTF8);
         }
 
         /// <summary>
@@ -228,7 +228,7 @@ namespace CandyJun.Rsa
         /// <param name="hashAlgorithm">加密算法和填充模式</param>
         /// <param name="encoding">字符串编码格式</param>
         /// <returns>base64编码的加密后数据</returns>
-        public static string EncryptString(this RSA provider, string data, string hashAlgorithm, Encoding encoding)
+        public static string Encrypt(this RSA provider, string data, string hashAlgorithm, Encoding encoding)
         {
             return Convert.ToBase64String(provider.Encrypt(encoding.GetBytes(data), hashAlgorithm));
         }
