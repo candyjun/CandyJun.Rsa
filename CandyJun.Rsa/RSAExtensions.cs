@@ -56,33 +56,6 @@ namespace CandyJun.Rsa
         }
 
         /// <summary>
-        /// 导出XML格式密钥
-        /// </summary>
-        /// <param name="rsa"></param>
-        /// <param name="includePrivateParameters">是否包含私钥</param>
-        /// <returns></returns>
-        public static string ToXmlString2(this RSA rsa, bool includePrivateParameters)
-        {
-            RSAParameters parameters = rsa.ExportParameters(includePrivateParameters);
-
-            if (includePrivateParameters)
-            {
-                return string.Format("<RSAKeyValue><Modulus>{0}</Modulus><Exponent>{1}</Exponent><P>{2}</P><Q>{3}</Q><DP>{4}</DP><DQ>{5}</DQ><InverseQ>{6}</InverseQ><D>{7}</D></RSAKeyValue>",
-                    Convert.ToBase64String(parameters.Modulus),
-                    Convert.ToBase64String(parameters.Exponent),
-                    Convert.ToBase64String(parameters.P),
-                    Convert.ToBase64String(parameters.Q),
-                    Convert.ToBase64String(parameters.DP),
-                    Convert.ToBase64String(parameters.DQ),
-                    Convert.ToBase64String(parameters.InverseQ),
-                    Convert.ToBase64String(parameters.D));
-            }
-            return string.Format("<RSAKeyValue><Modulus>{0}</Modulus><Exponent>{1}</Exponent></RSAKeyValue>",
-                    Convert.ToBase64String(parameters.Modulus),
-                    Convert.ToBase64String(parameters.Exponent));
-        }
-
-        /// <summary>
         /// RSA加载PrivateKey
         /// </summary>
         /// <param name="privateKey">私钥key</param>
@@ -91,56 +64,6 @@ namespace CandyJun.Rsa
         {
             string xmlPrivateKey = RSAKeyConvert.ConvertPrivateKeyToXml(privateKey);
             rsa.FromXmlString2(xmlPrivateKey);
-        }
-
-        /// <summary>
-        /// RSA导出PrivateKey
-        /// </summary>
-        public static string ToPrivateKeyString(this RSA rsa)
-        {
-            RSAParameters parameters = rsa.ExportParameters(true);
-
-            BigInteger m = new BigInteger(1, parameters.Modulus);
-            BigInteger exp = new BigInteger(1, parameters.Exponent);
-            BigInteger d = new BigInteger(1, parameters.D);
-            BigInteger p = new BigInteger(1, parameters.P);
-            BigInteger q = new BigInteger(1, parameters.Q);
-            BigInteger dp = new BigInteger(1, parameters.DP);
-            BigInteger dq = new BigInteger(1, parameters.DQ);
-            BigInteger qinv = new BigInteger(1, parameters.InverseQ);
-
-            RsaPrivateCrtKeyParameters privateKeyParam = new RsaPrivateCrtKeyParameters(m, exp, d, p, q, dp, dq, qinv);
-
-            PrivateKeyInfo privateKeyInfo = PrivateKeyInfoFactory.CreatePrivateKeyInfo(privateKeyParam);
-            byte[] serializedPrivateBytes = privateKeyInfo.ToAsn1Object().GetEncoded();
-            return Convert.ToBase64String(serializedPrivateBytes);
-        }
-
-        /// <summary>
-        /// RSA加载PublicKey
-        /// </summary>
-        /// <param name="publicKey">公钥key</param>
-        /// <returns></returns>
-        public static void FromPublicKeyString(this RSA rsa, string publicKey)
-        {
-            string xmlpublicKey = RSAKeyConvert.ConvertPublicKeyToXml(publicKey);
-            rsa.FromXmlString2(xmlpublicKey);
-        }
-
-        /// <summary>
-        /// RSA导出PublicKey
-        /// </summary>
-        public static string ToPublicKeyString(this RSA rsa)
-        {
-            RSAParameters parameters = rsa.ExportParameters(false);
-           
-            BigInteger m = new BigInteger(1, parameters.Modulus);
-            BigInteger p = new BigInteger(1, parameters.Exponent);
-            RsaKeyParameters pub = new RsaKeyParameters(false, m, p);
-
-            SubjectPublicKeyInfo publicKeyInfo = SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(pub);
-            byte[] serializedPublicBytes = publicKeyInfo.ToAsn1Object().GetDerEncoded();
-            return Convert.ToBase64String(serializedPublicBytes);
         }
 
         /// <summary>
@@ -181,6 +104,106 @@ namespace CandyJun.Rsa
             };
 
             rsa.ImportParameters(p);
+        }
+
+        /// <summary>
+        /// RSA加载pkcs证书(.pfx文件)
+        /// </summary>
+        /// <param name="pkcs12FileContents">证书文件</param>
+        /// <param name="includePrivateParameters">是否包含私钥</param>
+        /// <returns></returns>
+        public static void FromPkcs12Bytes(this RSA rsa, byte[] pkcs12FileContents, bool includePrivateParameters, string password = null)
+        {
+            string xmlPrivateKey = RSAKeyConvert.ConvertPrivateKeyPkcs12ToXml(pkcs12FileContents, includePrivateParameters, password);
+            rsa.FromXmlString2(xmlPrivateKey);
+        }
+
+        /// <summary>
+        /// 导出XML格式密钥
+        /// </summary>
+        /// <param name="rsa"></param>
+        /// <param name="includePrivateParameters">是否包含私钥</param>
+        /// <returns></returns>
+        public static string ToXmlString2(this RSA rsa, bool includePrivateParameters)
+        {
+            RSAParameters parameters = rsa.ExportParameters(includePrivateParameters);
+
+            if (includePrivateParameters)
+            {
+                return string.Format("<RSAKeyValue><Modulus>{0}</Modulus><Exponent>{1}</Exponent><P>{2}</P><Q>{3}</Q><DP>{4}</DP><DQ>{5}</DQ><InverseQ>{6}</InverseQ><D>{7}</D></RSAKeyValue>",
+                    Convert.ToBase64String(parameters.Modulus),
+                    Convert.ToBase64String(parameters.Exponent),
+                    Convert.ToBase64String(parameters.P),
+                    Convert.ToBase64String(parameters.Q),
+                    Convert.ToBase64String(parameters.DP),
+                    Convert.ToBase64String(parameters.DQ),
+                    Convert.ToBase64String(parameters.InverseQ),
+                    Convert.ToBase64String(parameters.D));
+            }
+            return string.Format("<RSAKeyValue><Modulus>{0}</Modulus><Exponent>{1}</Exponent></RSAKeyValue>",
+                    Convert.ToBase64String(parameters.Modulus),
+                    Convert.ToBase64String(parameters.Exponent));
+        }
+
+        /// <summary>
+        /// RSA导出PrivateKey
+        /// </summary>
+        public static string ToPrivateKeyString(this RSA rsa)
+        {
+            RSAParameters parameters = rsa.ExportParameters(true);
+
+            BigInteger m = new BigInteger(1, parameters.Modulus);
+            BigInteger exp = new BigInteger(1, parameters.Exponent);
+            BigInteger d = new BigInteger(1, parameters.D);
+            BigInteger p = new BigInteger(1, parameters.P);
+            BigInteger q = new BigInteger(1, parameters.Q);
+            BigInteger dp = new BigInteger(1, parameters.DP);
+            BigInteger dq = new BigInteger(1, parameters.DQ);
+            BigInteger qinv = new BigInteger(1, parameters.InverseQ);
+
+            RsaPrivateCrtKeyParameters privateKeyParam = new RsaPrivateCrtKeyParameters(m, exp, d, p, q, dp, dq, qinv);
+
+            PrivateKeyInfo privateKeyInfo = PrivateKeyInfoFactory.CreatePrivateKeyInfo(privateKeyParam);
+            byte[] serializedPrivateBytes = privateKeyInfo.ToAsn1Object().GetEncoded();
+            return Convert.ToBase64String(serializedPrivateBytes);
+        }
+
+        /// <summary>
+        /// RSA加载PublicKey
+        /// </summary>
+        /// <param name="publicKey">公钥key</param>
+        /// <returns></returns>
+        public static void FromPublicKeyString(this RSA rsa, string publicKey)
+        {
+            string xmlpublicKey = RSAKeyConvert.ConvertPublicKeyToXml(publicKey);
+            rsa.FromXmlString2(xmlpublicKey);
+        }
+
+        /// <summary>
+        /// RSA加载PublicCert(.cer和.der格式证书)
+        /// </summary>
+        /// <param name="publicCert">公钥key</param>
+        /// <returns></returns>
+        public static void FromPublicCert(this RSA rsa, byte[] publicCert)
+        {
+            string xmlpublicKey = RSAKeyConvert.ConvertPublicCertToXml(publicCert);
+            rsa.FromXmlString2(xmlpublicKey);
+        }
+
+        /// <summary>
+        /// RSA导出PublicKey
+        /// </summary>
+        public static string ToPublicKeyString(this RSA rsa)
+        {
+            RSAParameters parameters = rsa.ExportParameters(false);
+           
+            BigInteger m = new BigInteger(1, parameters.Modulus);
+            BigInteger p = new BigInteger(1, parameters.Exponent);
+            RsaKeyParameters pub = new RsaKeyParameters(false, m, p);
+
+            SubjectPublicKeyInfo publicKeyInfo = SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(pub);
+            byte[] serializedPublicBytes = publicKeyInfo.ToAsn1Object().GetDerEncoded();
+            return Convert.ToBase64String(serializedPublicBytes);
         }
         #endregion
 
@@ -233,9 +256,9 @@ namespace CandyJun.Rsa
         /// <param name="data">待解密的字符串(base64格式)</param>
         /// <param name="hashAlgorithm">解密算法和填充模式</param>
         /// <returns>原始字符串(将以UTF8格式解码)</returns>
-        public static string DecryptString(this RSA provider, string data, string hashAlgorithm)
+        public static string Decrypt(this RSA provider, string data, string hashAlgorithm)
         {
-            return provider.DecryptString(data, hashAlgorithm, Encoding.UTF8);
+            return provider.Decrypt(data, hashAlgorithm, Encoding.UTF8);
         }
 
         /// <summary>
@@ -245,7 +268,7 @@ namespace CandyJun.Rsa
         /// <param name="data">待解密的字符串(base64格式)</param>
         /// <param name="hashAlgorithm">解密算法和填充模式</param>
         /// <returns>原始字符串</returns>
-        public static string DecryptString(this RSA provider, string data, string hashAlgorithm, Encoding encoding)
+        public static string Decrypt(this RSA provider, string data, string hashAlgorithm, Encoding encoding)
         {
             return encoding.GetString(provider.Decrypt(Convert.FromBase64String(data), hashAlgorithm));
         }
@@ -273,9 +296,9 @@ namespace CandyJun.Rsa
         /// <param name="data">待签名的字符串(将以UTF8格式编码加密)</param>
         /// <param name="hashAlgorithm">签名算法和填充模式</param>
         /// <returns>签名后字符串(base64格式)</returns>
-        public static string SignString(this RSA provider, string data, string hashAlgorithm)
+        public static string SignData(this RSA provider, string data, string hashAlgorithm)
         {
-            return provider.SignString(data, hashAlgorithm, Encoding.UTF8);
+            return provider.SignData(data, hashAlgorithm, Encoding.UTF8);
         }
 
         /// <summary>
@@ -286,7 +309,7 @@ namespace CandyJun.Rsa
         /// <param name="hashAlgorithm">签名算法和填充模式</param>
         /// <param name="encoding">待签名的字符串编码格式</param>
         /// <returns>签名后字符串(base64格式)</returns>
-        public static string SignString(this RSA provider, string data, string hashAlgorithm, Encoding encoding)
+        public static string SignData(this RSA provider, string data, string hashAlgorithm, Encoding encoding)
         {
             return Convert.ToBase64String(provider.SignData(encoding.GetBytes(data), hashAlgorithm));
         }
@@ -316,9 +339,9 @@ namespace CandyJun.Rsa
         /// <param name="hashAlgorithm">签名算法和填充模式</param>
         /// <param name="signature">签名后数据(base64格式)</param>
         /// <returns></returns>
-        public static bool VerifyString(this RSA provider, string data, string hashAlgorithm, string signature)
+        public static bool VerifyData(this RSA provider, string data, string hashAlgorithm, string signature)
         {
-            return provider.VerifyString(data, hashAlgorithm, signature, Encoding.UTF8);
+            return provider.VerifyData(data, hashAlgorithm, signature, Encoding.UTF8);
         }
 
         /// <summary>
@@ -330,7 +353,7 @@ namespace CandyJun.Rsa
         /// <param name="signature">签名后数据(base64格式)</param>
         /// <param name="encoding">原始数据编码格式</param>
         /// <returns></returns>
-        public static bool VerifyString(this RSA provider, string data, string hashAlgorithm, string signature, Encoding encoding)
+        public static bool VerifyData(this RSA provider, string data, string hashAlgorithm, string signature, Encoding encoding)
         {
             return provider.VerifyData(encoding.GetBytes(data), hashAlgorithm, Convert.FromBase64String(signature));
         }

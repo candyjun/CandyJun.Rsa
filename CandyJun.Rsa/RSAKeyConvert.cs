@@ -10,7 +10,6 @@ using Org.BouncyCastle.X509;
 using System;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -67,27 +66,25 @@ namespace CandyJun.Rsa
         }
 
         /// <summary>
-        ///  把私钥Key转换成xml格式私钥
+        ///  把pkcs12证书转换成xml格式私钥
         /// </summary>
-        /// <param name="pkcs12PrivateKey">私钥Key</param>
+        /// <param name="pkcs12FileContents">pkcs12证书</param>
+        /// <param name="includePrivateParameters">是否包含私钥</param>
         /// <param name="password">私钥密码</param>
         /// <returns>xml格式私钥</returns>
-        public static string ConvertPrivateKeyPkcs12ToXml(string pkcs12PrivateKey, string password = null)
+        public static string ConvertPrivateKeyPkcs12ToXml(byte[] pkcs12FileContents, bool includePrivateParameters, string password = null)
         {
-            X509Certificate2 cert = new X509Certificate2(Encoding.UTF8.GetBytes(pkcs12PrivateKey), password);
-            return cert.PrivateKey.ToXmlString(true);
-        }
-
-        /// <summary>
-        ///  把私钥Key转换成xml格式私钥
-        /// </summary>
-        /// <param name="pkcs12PrivateKey">私钥Key</param>
-        /// <param name="password">私钥密码</param>
-        /// <returns>xml格式私钥</returns>
-        public static string ConvertPublicKeyPkcs12ToXml(string pkcs12PrivateKey, string password = null)
-        {
-            X509Certificate2 cert = new X509Certificate2(Encoding.UTF8.GetBytes(pkcs12PrivateKey), password);
-            return cert.PrivateKey.ToXmlString(false);
+            X509Certificate2 cert = new X509Certificate2(pkcs12FileContents, password);
+            var parameters = cert.GetRSAPrivateKey().ExportParameters(true);
+            return string.Format("<RSAKeyValue><Modulus>{0}</Modulus><Exponent>{1}</Exponent><P>{2}</P><Q>{3}</Q><DP>{4}</DP><DQ>{5}</DQ><InverseQ>{6}</InverseQ><D>{7}</D></RSAKeyValue>",
+                    Convert.ToBase64String(parameters.Modulus),
+                    Convert.ToBase64String(parameters.Exponent),
+                    Convert.ToBase64String(parameters.P),
+                    Convert.ToBase64String(parameters.Q),
+                    Convert.ToBase64String(parameters.DP),
+                    Convert.ToBase64String(parameters.DQ),
+                    Convert.ToBase64String(parameters.InverseQ),
+                    Convert.ToBase64String(parameters.D));
         }
 
         /// <summary>
@@ -150,6 +147,20 @@ namespace CandyJun.Rsa
               Convert.ToBase64String(publicKeyParam.Modulus.ToByteArrayUnsigned()),
               Convert.ToBase64String(publicKeyParam.Exponent.ToByteArrayUnsigned()));
             return xmlpublicKey;
+        }
+
+        /// <summary>
+        /// 把公钥cer证书转换成xml格式公钥
+        /// </summary>
+        /// <param name="publicCer">公钥cer证书</param>
+        /// <returns>xml格式公钥</returns>
+        public static string ConvertPublicCertToXml(byte[] publicCer)
+        {
+            X509Certificate2 cert = new X509Certificate2(publicCer);
+            var parameters = cert.GetRSAPublicKey().ExportParameters(false);
+            return string.Format("<RSAKeyValue><Modulus>{0}</Modulus><Exponent>{1}</Exponent></RSAKeyValue>",
+                    Convert.ToBase64String(parameters.Modulus),
+                    Convert.ToBase64String(parameters.Exponent));
         }
 
         /// <summary>

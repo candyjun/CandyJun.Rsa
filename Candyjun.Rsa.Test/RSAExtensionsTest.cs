@@ -19,24 +19,28 @@ namespace Candyjun.Rsa.Test
         {
             var generator = new RsaKeyPairGenerator();
             var secureRandom = new SecureRandom();
-            //secureRandom.SetSeed(seed);
             generator.Init(new KeyGenerationParameters(secureRandom, 2048));
             var pair = generator.GenerateKeyPair();
 
-            var twPrivate = new StringWriter();
-            PemWriter pwPrivate = new PemWriter(twPrivate);
-            pwPrivate.WriteObject(pair.Private);
-            pwPrivate.Writer.Flush();
-            privateKey = twPrivate.ToString();
-            Console.WriteLine("Private Key£º" + privateKey);
+            using (var twPrivate = new StringWriter())
+            {
+                PemWriter pwPrivate = new PemWriter(twPrivate);
+                pwPrivate.WriteObject(pair.Private);
+                pwPrivate.Writer.Flush();
+                privateKey = twPrivate.ToString();
+                Console.WriteLine("Private Key£º" + privateKey);
+            }
 
-            var twPublic = new StringWriter();
-            PemWriter pwPublic = new PemWriter(twPublic);
-            pwPublic.WriteObject(pair.Public);
-            pwPublic.Writer.Flush();
-            publicKey = twPublic.ToString();
-            Console.WriteLine("Public Key£º" + publicKey);
+            using (var twPublic = new StringWriter())
+            {
+                PemWriter pwPublic = new PemWriter(twPublic);
+                pwPublic.WriteObject(pair.Public);
+                pwPublic.Writer.Flush();
+                publicKey = twPublic.ToString();
+                Console.WriteLine("Public Key£º" + publicKey);
+            }
         }
+
         [TestMethod]
         public void TestEncryptString()
         {
@@ -47,7 +51,7 @@ namespace Candyjun.Rsa.Test
 
             var provider2 = RSA.Create();
             provider2.FromPemPrivateKeyString(privateKey);
-            var sourceStr = provider2.DecryptString(encStr, "RSA");
+            var sourceStr = provider2.Decrypt(encStr, "RSA");
             Assert.AreEqual(str, sourceStr);
         }
 
@@ -57,11 +61,11 @@ namespace Candyjun.Rsa.Test
             var provider = RSA.Create();
             provider.FromPemPrivateKeyString(privateKey);
             var str = "1";
-            var encStr = provider.SignString(str, "RSA");
+            var encStr = provider.SignData(str, "RSA");
 
             var provider2 = RSA.Create();
             provider2.FromPemPublicKeyString(publicKey);
-            var verifyResult = provider2.VerifyString(str, "RSA", encStr);
+            var verifyResult = provider2.VerifyData(str, "RSA/CCB/Nopadding", encStr);
             Assert.IsTrue(verifyResult);
         }
     }
