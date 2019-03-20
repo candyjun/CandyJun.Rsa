@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.28711.60
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CandyJun.Rsa", "CandyJun.Rsa\CandyJun.Rsa.csproj", "{84675D8F-0A9A-4877-A553-7170CD50E4CF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CandyJun.Rsa.Test", "Candyjun.Rsa.Test\CandyJun.Rsa.Test.csproj", "{6B274540-5707-4559-8A06-CF925F7DE201}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CandyJun.Rsa.Test", "CandyJun.Rsa.Test\CandyJun.Rsa.Test.csproj", "{6B274540-5707-4559-8A06-CF925F7DE201}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
