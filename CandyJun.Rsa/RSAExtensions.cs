@@ -213,11 +213,24 @@ namespace CandyJun.Rsa
         /// </summary>
         /// <param name="provider"></param>
         /// <param name="data">待加密的字符串(将以UTF8格式编码加密)</param>
-        /// <param name="hashAlgorithm">加密算法和填充模式</param>
+        /// <param name="mode">加密算法</param>
+        /// <param name="padding">填充模式</param>
         /// <returns>base64编码的加密后数据</returns>
-        public static string Encrypt(this RSA provider, string data, string hashAlgorithm)
+        public static string Encrypt(this RSA provider, string data, CipherMode mode, CipherPadding padding)
         {
-            return provider.Encrypt(data, hashAlgorithm, Encoding.UTF8);
+            return provider.Encrypt(data, mode, padding, Encoding.UTF8);
+        }
+
+        /// <summary>
+        /// 使用公钥加密
+        /// </summary>
+        /// <param name="provider"></param>
+        /// <param name="data">待加密的字符串(将以UTF8格式编码加密)</param>
+        /// <param name="algorithm">加密算法和填充模式</param>
+        /// <returns>base64编码的加密后数据</returns>
+        public static string Encrypt(this RSA provider, string data, string algorithm)
+        {
+            return provider.Encrypt(data, algorithm, Encoding.UTF8);
         }
 
         /// <summary>
@@ -225,12 +238,26 @@ namespace CandyJun.Rsa
         /// </summary>
         /// <param name="provider"></param>
         /// <param name="data">待加密的字符串</param>
-        /// <param name="hashAlgorithm">加密算法和填充模式</param>
+        /// <param name="mode">加密算法</param>
+        /// <param name="padding">填充模式</param>
         /// <param name="encoding">字符串编码格式</param>
         /// <returns>base64编码的加密后数据</returns>
-        public static string Encrypt(this RSA provider, string data, string hashAlgorithm, Encoding encoding)
+        public static string Encrypt(this RSA provider, string data, CipherMode mode, CipherPadding padding, Encoding encoding)
         {
-            return Convert.ToBase64String(provider.Encrypt(encoding.GetBytes(data), hashAlgorithm));
+            return Convert.ToBase64String(provider.Encrypt(encoding.GetBytes(data), mode, padding));
+        }
+
+        /// <summary>
+        /// 使用公钥加密
+        /// </summary>
+        /// <param name="provider"></param>
+        /// <param name="data">待加密的字符串</param>
+        /// <param name="algorithm">加密算法和填充模式</param>
+        /// <param name="encoding">字符串编码格式</param>
+        /// <returns>base64编码的加密后数据</returns>
+        public static string Encrypt(this RSA provider, string data, string algorithm, Encoding encoding)
+        {
+            return Convert.ToBase64String(provider.Encrypt(encoding.GetBytes(data), algorithm));
         }
 
         /// <summary>
@@ -238,13 +265,26 @@ namespace CandyJun.Rsa
         /// </summary>
         /// <param name="provider"></param>
         /// <param name="data">待加密的数据</param>
-        /// <param name="hashAlgorithm">加密算法和填充模式</param>
+        /// <param name="mode">加密算法</param>
+        /// <param name="padding">填充模式</param>
         /// <returns>加密后的数据</returns>
-        public static byte[] Encrypt(this RSA provider, byte[] data, string hashAlgorithm)
+        public static byte[] Encrypt(this RSA provider, byte[] data, CipherMode mode, CipherPadding padding)
+        {
+            return provider.Encrypt(data, $"RSA/{(mode == CipherMode.NONE ? "" : mode.ToString())}/{padding}");
+        }
+
+        /// <summary>
+        /// 使用公钥加密
+        /// </summary>
+        /// <param name="provider"></param>
+        /// <param name="data">待加密的数据</param>
+        /// <param name="algorithm">加密算法和填充模式</param>
+        /// <returns>加密后的数据</returns>
+        public static byte[] Encrypt(this RSA provider, byte[] data, string algorithm)
         {
             var publicKey = provider.ToPublicKeyString();
             RsaKeyParameters publicKeyParam = (RsaKeyParameters)PublicKeyFactory.CreateKey(Convert.FromBase64String(publicKey));
-            var cipher = CipherUtilities.GetCipher(hashAlgorithm);
+            var cipher = CipherUtilities.GetCipher(algorithm);
             cipher.Init(true, publicKeyParam);
             return cipher.DoFinal(data);
         }
@@ -254,11 +294,12 @@ namespace CandyJun.Rsa
         /// </summary>
         /// <param name="provider"></param>
         /// <param name="data">待解密的字符串(base64格式)</param>
-        /// <param name="hashAlgorithm">解密算法和填充模式</param>
+        /// <param name="mode">加密算法</param>
+        /// <param name="padding">填充模式</param>
         /// <returns>原始字符串(将以UTF8格式解码)</returns>
-        public static string Decrypt(this RSA provider, string data, string hashAlgorithm)
+        public static string Decrypt(this RSA provider, string data, CipherMode mode, CipherPadding padding)
         {
-            return provider.Decrypt(data, hashAlgorithm, Encoding.UTF8);
+            return provider.Decrypt(data, mode, padding, Encoding.UTF8);
         }
 
         /// <summary>
@@ -266,11 +307,36 @@ namespace CandyJun.Rsa
         /// </summary>
         /// <param name="provider"></param>
         /// <param name="data">待解密的字符串(base64格式)</param>
-        /// <param name="hashAlgorithm">解密算法和填充模式</param>
-        /// <returns>原始字符串</returns>
-        public static string Decrypt(this RSA provider, string data, string hashAlgorithm, Encoding encoding)
+        /// <param name="algorithm">解密算法和填充模式</param>
+        /// <returns>原始字符串(将以UTF8格式解码)</returns>
+        public static string Decrypt(this RSA provider, string data, string algorithm)
         {
-            return encoding.GetString(provider.Decrypt(Convert.FromBase64String(data), hashAlgorithm));
+            return provider.Decrypt(data, algorithm, Encoding.UTF8);
+        }
+
+        /// <summary>
+        /// 使用私钥解密
+        /// </summary>
+        /// <param name="provider"></param>
+        /// <param name="data">待解密的字符串(base64格式)</param>
+        /// <param name="mode">加密算法</param>
+        /// <param name="padding">填充模式</param>
+        /// <returns>原始字符串</returns>
+        public static string Decrypt(this RSA provider, string data, CipherMode mode, CipherPadding padding, Encoding encoding)
+        {
+            return encoding.GetString(provider.Decrypt(Convert.FromBase64String(data), mode, padding));
+        }
+
+        /// <summary>
+        /// 使用私钥解密
+        /// </summary>
+        /// <param name="provider"></param>
+        /// <param name="data">待解密的字符串(base64格式)</param>
+        /// <param name="algorithm">解密算法和填充模式</param>
+        /// <returns>原始字符串</returns>
+        public static string Decrypt(this RSA provider, string data, string algorithm, Encoding encoding)
+        {
+            return encoding.GetString(provider.Decrypt(Convert.FromBase64String(data), algorithm));
         }
 
         /// <summary>
@@ -278,13 +344,26 @@ namespace CandyJun.Rsa
         /// </summary>
         /// <param name="provider"></param>
         /// <param name="data">待解密的数据</param>
-        /// <param name="hashAlgorithm">解密算法和填充模式</param>
+        /// <param name="mode">加密算法</param>
+        /// <param name="padding">填充模式</param>
         /// <returns>原始数据</returns>
-        public static byte[] Decrypt(this RSA provider, byte[] data, string hashAlgorithm)
+        public static byte[] Decrypt(this RSA provider, byte[] data, CipherMode mode, CipherPadding padding)
+        {
+            return provider.Decrypt(data, $"RSA/{(mode == CipherMode.NONE ? "" : mode.ToString())}/{padding}");
+        }
+
+        /// <summary>
+        /// 使用私钥解密
+        /// </summary>
+        /// <param name="provider"></param>
+        /// <param name="data">待解密的数据</param>
+        /// <param name="algorithm">解密算法和填充模式</param>
+        /// <returns>原始数据</returns>
+        public static byte[] Decrypt(this RSA provider, byte[] data, string algorithm)
         {
             var privateKey = provider.ToPrivateKeyString();
             RsaKeyParameters privateKeyParam = (RsaKeyParameters)PrivateKeyFactory.CreateKey(Convert.FromBase64String(privateKey));
-            var cipher = CipherUtilities.GetCipher(hashAlgorithm);
+            var cipher = CipherUtilities.GetCipher(algorithm);
             cipher.Init(false, privateKeyParam);
             return cipher.DoFinal(data);
         }
@@ -294,11 +373,23 @@ namespace CandyJun.Rsa
         /// </summary>
         /// <param name="provider"></param>
         /// <param name="data">待签名的字符串(将以UTF8格式编码加密)</param>
-        /// <param name="hashAlgorithm">签名算法和填充模式</param>
+        /// <param name="algorithm">签名算法和填充模式</param>
         /// <returns>签名后字符串(base64格式)</returns>
-        public static string SignData(this RSA provider, string data, string hashAlgorithm)
+        public static string SignData(this RSA provider, string data, HashAlgorithm algorithm)
         {
-            return provider.SignData(data, hashAlgorithm, Encoding.UTF8);
+            return provider.SignData(data, algorithm, Encoding.UTF8);
+        }
+
+        /// <summary>
+        /// 使用私钥签名
+        /// </summary>
+        /// <param name="provider"></param>
+        /// <param name="data">待签名的字符串(将以UTF8格式编码加密)</param>
+        /// <param name="algorithm">签名算法和填充模式</param>
+        /// <returns>签名后字符串(base64格式)</returns>
+        public static string SignData(this RSA provider, string data, string algorithm)
+        {
+            return provider.SignData(data, algorithm, Encoding.UTF8);
         }
 
         /// <summary>
@@ -306,12 +397,25 @@ namespace CandyJun.Rsa
         /// </summary>
         /// <param name="provider"></param>
         /// <param name="data">待签名的字符串</param>
-        /// <param name="hashAlgorithm">签名算法和填充模式</param>
+        /// <param name="algorithm">签名算法和填充模式</param>
         /// <param name="encoding">待签名的字符串编码格式</param>
         /// <returns>签名后字符串(base64格式)</returns>
-        public static string SignData(this RSA provider, string data, string hashAlgorithm, Encoding encoding)
+        public static string SignData(this RSA provider, string data, HashAlgorithm algorithm, Encoding encoding)
         {
-            return Convert.ToBase64String(provider.SignData(encoding.GetBytes(data), hashAlgorithm));
+            return Convert.ToBase64String(provider.SignData(encoding.GetBytes(data), algorithm));
+        }
+
+        /// <summary>
+        /// 使用私钥签名
+        /// </summary>
+        /// <param name="provider"></param>
+        /// <param name="data">待签名的字符串</param>
+        /// <param name="algorithm">签名算法和填充模式</param>
+        /// <param name="encoding">待签名的字符串编码格式</param>
+        /// <returns>签名后字符串(base64格式)</returns>
+        public static string SignData(this RSA provider, string data, string algorithm, Encoding encoding)
+        {
+            return Convert.ToBase64String(provider.SignData(encoding.GetBytes(data), algorithm));
         }
 
         /// <summary>
@@ -319,13 +423,29 @@ namespace CandyJun.Rsa
         /// </summary>
         /// <param name="provider"></param>
         /// <param name="data">待签名的数据</param>
-        /// <param name="hashAlgorithm">签名算法和填充模式</param>
+        /// <param name="algorithm">签名算法和填充模式</param>
         /// <returns>签名后数据</returns>
-        public static byte[] SignData(this RSA provider, byte[] data, string hashAlgorithm)
+        public static byte[] SignData(this RSA provider, byte[] data, HashAlgorithm algorithm)
+        {
+            if (algorithm == HashAlgorithm.RAW)
+            {
+                algorithm = HashAlgorithm.NONE;
+            }
+            return provider.SignData(data, $"{algorithm}WITHRSA");
+        }
+
+        /// <summary>
+        /// 使用私钥签名
+        /// </summary>
+        /// <param name="provider"></param>
+        /// <param name="data">待签名的数据</param>
+        /// <param name="algorithm">签名算法和填充模式</param>
+        /// <returns>签名后数据</returns>
+        public static byte[] SignData(this RSA provider, byte[] data, string algorithm)
         {
             var privateKey = provider.ToPrivateKeyString();
             RsaKeyParameters privateKeyParam = (RsaKeyParameters)PrivateKeyFactory.CreateKey(Convert.FromBase64String(privateKey));
-            var signer = SignerUtilities.GetSigner(hashAlgorithm);
+            var signer = SignerUtilities.GetSigner(algorithm);
             signer.Init(true, privateKeyParam);
             signer.BlockUpdate(data, 0, data.Length);
             return signer.GenerateSignature();
@@ -336,12 +456,25 @@ namespace CandyJun.Rsa
         /// </summary>
         /// <param name="provider"></param>
         /// <param name="data">原始数据(将以UTF8格式编码)</param>
-        /// <param name="hashAlgorithm">签名算法和填充模式</param>
+        /// <param name="algorithm">散列算法</param>
         /// <param name="signature">签名后数据(base64格式)</param>
         /// <returns></returns>
-        public static bool VerifyData(this RSA provider, string data, string hashAlgorithm, string signature)
+        public static bool VerifyData(this RSA provider, string data, HashAlgorithm algorithm, string signature)
         {
-            return provider.VerifyData(data, hashAlgorithm, signature, Encoding.UTF8);
+            return provider.VerifyData(data, algorithm, signature, Encoding.UTF8);
+        }
+
+        /// <summary>
+        /// 使用公钥验签
+        /// </summary>
+        /// <param name="provider"></param>
+        /// <param name="data">原始数据(将以UTF8格式编码)</param>
+        /// <param name="algorithm">散列算法</param>
+        /// <param name="signature">签名后数据(base64格式)</param>
+        /// <returns></returns>
+        public static bool VerifyData(this RSA provider, string data, string algorithm, string signature)
+        {
+            return provider.VerifyData(data, algorithm, signature, Encoding.UTF8);
         }
 
         /// <summary>
@@ -349,13 +482,13 @@ namespace CandyJun.Rsa
         /// </summary>
         /// <param name="provider"></param>
         /// <param name="data">原始数据</param>
-        /// <param name="hashAlgorithm">签名算法和填充模式</param>
+        /// <param name="algorithm">散列算法</param>
         /// <param name="signature">签名后数据(base64格式)</param>
         /// <param name="encoding">原始数据编码格式</param>
         /// <returns></returns>
-        public static bool VerifyData(this RSA provider, string data, string hashAlgorithm, string signature, Encoding encoding)
+        public static bool VerifyData(this RSA provider, string data, HashAlgorithm algorithm, string signature, Encoding encoding)
         {
-            return provider.VerifyData(encoding.GetBytes(data), hashAlgorithm, Convert.FromBase64String(signature));
+            return provider.VerifyData(encoding.GetBytes(data), algorithm, Convert.FromBase64String(signature));
         }
 
         /// <summary>
@@ -363,14 +496,45 @@ namespace CandyJun.Rsa
         /// </summary>
         /// <param name="provider"></param>
         /// <param name="data">原始数据</param>
-        /// <param name="hashAlgorithm">签名算法和填充模式</param>
+        /// <param name="algorithm">散列算法</param>
+        /// <param name="signature">签名后数据(base64格式)</param>
+        /// <param name="encoding">原始数据编码格式</param>
+        /// <returns></returns>
+        public static bool VerifyData(this RSA provider, string data, string algorithm, string signature, Encoding encoding)
+        {
+            return provider.VerifyData(encoding.GetBytes(data), algorithm, Convert.FromBase64String(signature));
+        }
+
+        /// <summary>
+        /// 使用公钥验签
+        /// </summary>
+        /// <param name="provider"></param>
+        /// <param name="data">原始数据</param>
+        /// <param name="algorithm">散列算法</param>
         /// <param name="signature">签名后数据</param>
         /// <returns></returns>
-        public static bool VerifyData(this RSA provider, byte[] data, string hashAlgorithm, byte[] signature)
+        public static bool VerifyData(this RSA provider, byte[] data, HashAlgorithm algorithm, byte[] signature)
+        {
+            if (algorithm == HashAlgorithm.RAW)
+            {
+                algorithm = HashAlgorithm.NONE;
+            }
+            return provider.VerifyData(data, $"{algorithm}WITHRSA", signature);
+        }
+
+        /// <summary>
+        /// 使用公钥验签
+        /// </summary>
+        /// <param name="provider"></param>
+        /// <param name="data">原始数据</param>
+        /// <param name="algorithm">散列算法</param>
+        /// <param name="signature">签名后数据</param>
+        /// <returns></returns>
+        public static bool VerifyData(this RSA provider, byte[] data, string algorithm, byte[] signature)
         {
             var publicKey = provider.ToPublicKeyString();
             RsaKeyParameters publicKeyParam = (RsaKeyParameters)PublicKeyFactory.CreateKey(Convert.FromBase64String(publicKey));
-            var signer = SignerUtilities.GetSigner(hashAlgorithm);
+            var signer = SignerUtilities.GetSigner(algorithm);
             signer.Init(false, publicKeyParam);
             signer.BlockUpdate(data, 0, data.Length);
             return signer.VerifySignature(signature);

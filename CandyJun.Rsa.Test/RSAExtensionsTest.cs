@@ -31,11 +31,11 @@ namespace CandyJun.Rsa.Test
             var provider = RSA.Create();
             provider.FromPublicCert(publicCer);
             var str = "1";
-            var encStr = provider.Encrypt(str, "RSA");
+            var encStr = provider.Encrypt(str, CipherMode.NONE, CipherPadding.PKCS7);
 
             var provider2 = RSA.Create();
             provider2.FromPkcs12Bytes(pkcs12FileContents, true);
-            var sourceStr = provider2.Decrypt(encStr, "RSA");
+            var sourceStr = provider2.Decrypt(encStr, "RSA//PKCS7PADDING");
             Assert.AreEqual(str, sourceStr);
         }
 
@@ -45,13 +45,13 @@ namespace CandyJun.Rsa.Test
             var provider = RSA.Create();
             provider.FromPrivateKeyString(privateKey);
             var str = "1";
-            var encStr = provider.SignData(str, "MD5WITHRSA");
+            var encStr = provider.SignData(str, SignerAlgorithms.SHA256.SHA256WITHRSA);
 
             var provider2 = RSA.Create();
             var pub = RSAKeyConvert.ConvertPublicCertToXml(publicCer);
             pub = RSAKeyConvert.ConvertXmlToPublicKey(pub);
             provider2.FromPemPublicKeyString(RsaPemFormatHelper.PublicKeyFormat(pub));
-            var verifyResult = provider2.VerifyData(str, "MD5WITHRSA", encStr);
+            var verifyResult = provider2.VerifyData(str, SignerAlgorithms.SHA256.SHA256WITHRSA, encStr);
             Assert.IsTrue(verifyResult);
         }
 
@@ -84,7 +84,7 @@ namespace CandyJun.Rsa.Test
             var provider = RSA.Create();
             provider.FromPemPrivateKeyString(privatePemKey);
             var str = "1";
-            var encStr = provider.SignData(str, "MD5WITHRSA");
+            var encStr = provider.SignData(str, HashAlgorithm.MD5);
 
             var provider2 = RSA.Create();
             provider2.FromXmlStringCore(provider.ToXmlStringCore(true));
