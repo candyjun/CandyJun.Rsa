@@ -15,7 +15,7 @@ Install-Package CandyJun.Rsa
 
 # Demo
 
-## Generat a pair of key
+### Generat a pair of key
 ```
 var generator = new RsaKeyPairGenerator();
 var secureRandom = new SecureRandom();
@@ -40,7 +40,7 @@ using (var twPublic = new StringWriter())
     Console.WriteLine("Public Key£º" + publicKey);
 }
 ```
-## Encrypt and sign
+### Encrypt and sign
 ```
 var provider = RSA.Create();
 //load cert from private key by pem format 
@@ -51,7 +51,7 @@ var encStr = provider.Encrypt(str, CipherMode.NONE, CipherPadding.PKCS7);
 //sian with md5
 var signStr = provider.SignData(encStr, HashAlgorithm.MD5);
 ```
-## Decrypt and verify
+### Decrypt and verify
 ```
 var provider2 = RSA.Create();
 //load cert from xml, witch convert from another provider export
@@ -61,18 +61,18 @@ var verifyResult = provider2.VerifyData(encStr, "MD5WITHRSA", signStr);
 var sourceStr = provider2.Decrypt(encStr, "RSA//PKCS7PADDING");
 ```
 
-# Reference component
+## Reference component
 
  [bc-csharp](https://github.com/bcgit/bc-csharp "bc-csharp") - bcgit
 
-# Change Log
+## Change Log
 
-## v1.0.0
+### v1.0.0
 
-### Features
+#### Features
 - Add project
 
-## v1.0.1
+### v1.0.1
 
-### Features
+#### Features
 - Add enum params
