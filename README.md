@@ -40,7 +40,7 @@ using (var twPublic = new StringWriter())
     Console.WriteLine("Public Key£º" + publicKey);
 }
 ```
-## Encrypt and sian
+## Encrypt and sign
 ```
 var provider = RSA.Create();
 //load cert from private key by pem format 
