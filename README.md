@@ -1,8 +1,8 @@
 # CandyJun.Rsa
 A .NET Core RSA extensions.
-1.Extensions of RSA
-2.Converter for RSA key
-3.Compatible with Java
+- 1.Extensions of RSA
+- 2.Converter for RSA key
+- 3.Compatible with Java
 
 Thanks for bcgit's [bc-csharp](https://github.com/bcgit/bc-csharp "bc-csharp")
 
