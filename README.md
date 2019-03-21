@@ -16,7 +16,7 @@ Install-Package CandyJun.Rsa
 # Demo
 
 ### Generat a pair of key
-```
+```csharp
 var generator = new RsaKeyPairGenerator();
 var secureRandom = new SecureRandom();
 generator.Init(new KeyGenerationParameters(secureRandom, 2048));
@@ -41,7 +41,7 @@ using (var twPublic = new StringWriter())
 }
 ```
 ### Encrypt and sign
-```
+```csharp
 var provider = RSA.Create();
 //load cert from private key by pem format 
 provider.FromPemPrivateKeyString(privatePemKey);
@@ -52,7 +52,7 @@ var encStr = provider.Encrypt(str, CipherMode.NONE, CipherPadding.PKCS7);
 var signStr = provider.SignData(encStr, HashAlgorithm.MD5);
 ```
 ### Decrypt and verify
-```
+```csharp
 var provider2 = RSA.Create();
 //load cert from xml, witch convert from another provider export
 provider2.FromXmlStringCore(provider.ToXmlStringCore(true));
