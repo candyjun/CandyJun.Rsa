@@ -28,7 +28,7 @@ using (var twPrivate = new StringWriter())
     pwPrivate.WriteObject(pair.Private);
     pwPrivate.Writer.Flush();
     privatePemKey = twPrivate.ToString();
-    Console.WriteLine("Private Key£º" + privatePemKey);
+    Console.WriteLine("Private Keyï¼š" + privatePemKey);
 }
 string publicKey;
 using (var twPublic = new StringWriter())
@@ -37,7 +37,7 @@ using (var twPublic = new StringWriter())
     pwPublic.WriteObject(pair.Public);
     pwPublic.Writer.Flush();
     publicKey = twPublic.ToString();
-    Console.WriteLine("Public Key£º" + publicKey);
+    Console.WriteLine("Public Keyï¼š" + publicKey);
 }
 ```
 ### Encrypt and sign
